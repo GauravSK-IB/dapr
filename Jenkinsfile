@@ -40,6 +40,13 @@ pipeline {
         }
       }
     }
+    stage("Build-And-Push-Harbor") {
+       steps {
+        withDockerRegistry([credentialsId: "harbor-bloxcicd", url: "https://harbor.services.sdp.infoblox.com"]) {
+          sh "cd $DIRECTORY && make docker-push-harbor GOOS='linux' GOARCH='amd64' "
+        }
+      }
+    }
   
   }
   post {
