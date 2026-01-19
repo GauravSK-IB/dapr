@@ -13,7 +13,6 @@ export GOSUMDB ?= sum.golang.org
 
 PROJECT_ROOT := infobloxopen/dapr
 REPO         := infoblox
-HARBOR_REPO  := harbor.services.sdp.infoblox.com/infoblox
 GITHUB_REPO  := git@github.com:infobloxopen
 WINDOWS_VERSION :=1809
 
@@ -245,31 +244,6 @@ ifeq ($(LATEST_RELEASE),true)
 	$(DOCKER) push $(DAPR_RUNTIME_DOCKER_IMAGE_LATEST_TAG)
 	$(DOCKER) push $(DAPR_PLACEMENT_DOCKER_IMAGE_LATEST_TAG)
 	$(DOCKER) push $(DAPR_SENTRY_DOCKER_IMAGE_LATEST_TAG)
-endif
-
-# push docker images to Harbor registry
-docker-push-harbor: check-arch-platform docker-build
-ifeq ($(GOARCH),amd64)
-	$(info Tagging images for Harbor registry...)
-	$(DOCKER) tag $(DOCKER_IMAGE_TAG) $(HARBOR_REPO)/$(RELEASE_NAME):$(DAPR_VERSION)
-	$(DOCKER) tag $(DAPR_RUNTIME_DOCKER_IMAGE_TAG) $(HARBOR_REPO)/$(DAPR_RUNTIME_DOCKER_IMAGE_NAME):$(DAPR_VERSION)
-	$(info Pushing $(HARBOR_REPO)/$(RELEASE_NAME):$(DAPR_VERSION) docker image ...)
-	$(DOCKER) push $(HARBOR_REPO)/$(RELEASE_NAME):$(DAPR_VERSION)
-	$(info Pushing $(HARBOR_REPO)/$(DAPR_RUNTIME_DOCKER_IMAGE_NAME):$(DAPR_VERSION) docker image ...)
-	$(DOCKER) push $(HARBOR_REPO)/$(DAPR_RUNTIME_DOCKER_IMAGE_NAME):$(DAPR_VERSION)
-else
-	-$(DOCKER) buildx create --use --name daprbuild
-	-$(DOCKER) run --rm --privileged multiarch/qemu-user-static --reset
-	$(DOCKER) buildx build --build-arg PKG_FILES=*  -f $(DOCKERFILE_DIR)/$(DOCKERFILE) $(LINUX_BINS_OUT_DIR)  -t $(HARBOR_REPO)/$(RELEASE_NAME):$(DAPR_VERSION)  --push --platform $(DOCKER_IMAGE_PLATFORM)
-	$(DOCKER) buildx build --build-arg PKG_FILES=daprd  -f $(DOCKERFILE_DIR)/$(DOCKERFILE) $(LINUX_BINS_OUT_DIR)  -t $(HARBOR_REPO)/$(DAPR_RUNTIME_DOCKER_IMAGE_NAME):$(DAPR_VERSION)  --push --platform $(DOCKER_IMAGE_PLATFORM)
-endif
-ifeq ($(LATEST_RELEASE),true)
-	$(info Tagging latest images for Harbor...)
-	$(DOCKER) tag $(HARBOR_REPO)/$(RELEASE_NAME):$(DAPR_VERSION) $(HARBOR_REPO)/$(RELEASE_NAME):$(LATEST_TAG)
-	$(DOCKER) tag $(HARBOR_REPO)/$(DAPR_RUNTIME_DOCKER_IMAGE_NAME):$(DAPR_VERSION) $(HARBOR_REPO)/$(DAPR_RUNTIME_DOCKER_IMAGE_NAME):$(LATEST_TAG)
-	$(info Pushing latest tags to Harbor...)
-	$(DOCKER) push $(HARBOR_REPO)/$(RELEASE_NAME):$(LATEST_TAG)
-	$(DOCKER) push $(HARBOR_REPO)/$(DAPR_RUNTIME_DOCKER_IMAGE_NAME):$(LATEST_TAG)
 endif
 
 windows-version:

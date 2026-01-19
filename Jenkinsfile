@@ -36,20 +36,14 @@ pipeline {
        steps {
         withDockerRegistry([credentialsId: "dockerhub-bloxcicd", url: ""]) {
           sh "cd $DIRECTORY && make docker-push GOOS='linux' GOARCH='amd64' "
-          
         }
       }
     }
-    stage("Build-And-Push-Harbor") {
-       steps {
-        withDockerRegistry([credentialsId: "harbor-bloxcicd", url: "https://harbor.services.sdp.infoblox.com"]) {
-          sh "cd $DIRECTORY && make docker-push-harbor GOOS='linux' GOARCH='amd64' "
-        }
-      }
-    }
-  
   }
   post {
+    success {
+      finalizeBuild()
+    }
     cleanup {
      
       sh "cd $DIRECTORY && make clean GOOS='linux' GOARCH='amd64'"
