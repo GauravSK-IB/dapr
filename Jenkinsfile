@@ -42,7 +42,9 @@ pipeline {
   }
   post {
     success {
-      finalizeBuild()
+        dir("$DIRECTORY") {
+            finalizeBuild()
+        }
     }
     cleanup {
      
